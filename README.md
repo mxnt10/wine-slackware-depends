@@ -12,7 +12,7 @@
             <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/mxnt10/wine-slackware-depends?color=blue&label=GitHub%20Stars&style=flat-square">
         </a>
         <br/><br/>
-        <a><img src="https://raw.githubusercontent.com/mxnt10/cpu-limit/master/wine.png"></a>
+        <a><img src="https://raw.githubusercontent.com/mxnt10/wine-slackware-depends/master/wine.png"></a>
     <h2 align="center"><b>Sistema de pesquisa por Dependências do Wine no Slackware</b></h2>
 </h1><br/>
 
