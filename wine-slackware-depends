@@ -1,0 +1,83 @@
+#!/bin/bash
+
+###################################################################################################
+#                                                                                                 #
+# ### Sistema de pesquisa por Dependências do Wine no Slackware - Versão 1.0 - 01/10/2022 ###     #
+#                                                                                                 #
+# O objetivo do projeto é criar um utilitário que pode tanto servir como ferramenta de resolução  #
+# de dependências do wine no Slackware como pode servir para complementar algum outro projeto     #
+# como um AppImage que precise de dependências i386, sendo necessário o suporte multilib e as     #
+# dependências compat32 do multilib.                                                              #
+#                                                                                                 #
+# É uma ferramenta apenas para buscar dependências. Geralmente, o Slackware visa resolução de     #
+# dependências de forma manual.                                                                   #
+#                                                                                                 #
+# Testado no Slackware 15.0 x86_64 Stable                                                         #
+#                                                                                                 #
+# By Mauricio Ferrari                                                                             #
+#                                                                                                 #
+# Licença: GLPv3                                                                                  #
+#                                                                                                 #
+###################################################################################################
+
+# ### Dependendo do uso do script, pode precisar ###
+
+[ ! -e wine-*-1sg.dep ] && {
+	printf "\nBaixe um Arquivo de Dependências do Wine para o Slackware!\n"
+	exit 1
+}
+
+
+# ### Função de busca por Dependências ###
+
+dependencias_slackware_wine()
+{
+	DEPS_WINE=$(cut -d" " -f1 <(sed ':a;N;$!ba;s/ | /\n/g' <<< $(< wine-*-1sg.dep)))
+
+
+	# ### Operações para Pesquisas ###
+
+	cd /var/log/packages
+	LST=$(printf "%s\n" *)
+
+
+	# ### Busca por Dependências ###
+
+	for PKG in $DEPS_WINE; {
+		[ "$(grep "^gcc-" <<< $PKG)" ] && continue; # Não precisa verificar o gcc
+
+		VERIFY=$(grep "^$PKG-[0-9]" <<< $LST)
+		[ ! "$VERIFY" ] && NOTFOUND=$(echo -e "$NOTFOUND\n\t$PKG") || FOUND=$(echo -e "$FOUND\n\t$VERIFY") # FOUND pode ser comentado
+	}
+
+
+	# ### Organizando Informações, se for comentar o Debug podem ser comentados se não for necessário ###
+
+	FOUND=$(sort -u <<< $FOUND)
+	NUM_FOUND=$(wc -w <<< $FOUND)
+	NOTFOUND=$(sort -u <<< $NOTFOUND)
+
+	NUM_NOTFOUND=$(wc -w <<< $NOTFOUND) # Essencial, não deve ser comentado
+
+
+	# ### Debug do Resultado, pode ser comentado ###
+
+	printf "\nPacotes Encontrados: $NUM_FOUND\t\tNão Encontrados: $NUM_NOTFOUND\n"
+	printf "\nNome dos Pacotes Encontrados: $FOUND\n"
+	printf "\nNome dos Pacotes Não Encontrados: $NOTFOUND\n"
+
+
+	# ### Retorno Numérico ###
+
+	return $[ $(wc -w <<< $NOTFOUND) ]
+}
+
+
+# ### Por conta do Debug eu usei esse Método ###
+
+dependencias_slackware_wine; RETORNO=$?
+
+[ $RETORNO -gt 0 ] && {
+		 # Aqui você coloca qualquer coisa um diálogo em yad ou zenity por exemplo.
+	true # O true é só pra função não ficar vazia.
+}

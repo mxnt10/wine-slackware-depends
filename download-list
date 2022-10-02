@@ -1,0 +1,91 @@
+#!/bin/bash
+
+###################################################################################
+#                                                                                 #
+# ### Download da Lista de Dependências do Wine para o Slackware - Versão 1.0 ### #
+#                                                                                 #
+# By Mauricio Ferrari                                                             #
+#                                                                                 #
+# Compatibilidade YAD e ZENITY                                                    #
+#                                                                                 #
+###################################################################################
+
+DIAG=${DIAG:-"yad"}
+TITLE="Baixar Lista de Dependências Wine"
+PARMS='--window-icon=wine.png --width=400'
+PROGRESS="--progress --pulsate --no-cancel"
+
+[ ! $(which "$DIAG" 2>&-) ] && DIAG="zenity"
+
+
+# ### Função que mostra as barras de progresso ###
+
+_progress()
+{
+	[ "$DIAG" == "yad" ] && {
+		(while :; do x=$(( x + 1 )); echo $x; sleep 0.07; done | "$DIAG" --title="$TITLE - $1" $PARMS $PROGRESS) &
+	} || {
+		(while :; do echo "#"; done | "$DIAG" --title="$TITLE - $1" $PARMS $PROGRESS) &
+	}
+}
+
+
+# ### Parâmetros para o YAD ###
+
+[ "$DIAG" == "yad" ] && {
+	PARMS="$PARMS --center"
+	PROGRESS="$PROGRESS --no-buttons --hide-text"
+}
+
+
+# ### Coletando Informações da Página ###
+
+_progress "Aguarde"
+PAGE_WINE=$(links -dump https://sourceforge.net/projects/wine/files/Slackware%20Packages/)
+pkill "$DIAG"
+
+
+# ### Separando Versões mais Atuais ###
+
+LIST_VERSION=$(grep -Eo "[ ][[:digit:]]+([.][[:digit:]]+)+([-]rc[[:digit:]]+)*" <<< $PAGE_WINE)
+SELECT_VERSION=$(sed ':a;N;$!ba;s/\n /!/g' <(grep -E "[ ][6-9]" <<< $LIST_VERSION))
+
+
+# ### Selecionando Versão e Arquitetura com yad ###
+
+[ "$DIAG" == "yad" ] && {
+
+VERSION_WINE=$( "$DIAG" --title="$TITLE" $PARMS --form \
+	--field="Escolher Versão do Wine:":CB $SELECT_VERSION \
+	--field="Selecionar Arquitetura:":CB x86_64!i686 )
+
+[ ! $VERSION_WINE ] && exit 0
+
+}
+
+
+# ### Selecionando Versão e Arquitetura com zenity ###
+
+[ "$DIAG" == "zenity" ] && {
+
+VERSION_WINE=$( "$DIAG" --title="$TITLE" $PARMS --forms --text="" \
+	--add-combo "Escolher Versão do Wine:" \
+	--combo-values "${SELECT_VERSION//\!/\|}" \
+	--add-combo "Selecionar Arquitetura:" \
+	--combo-values "x86_64|i686" )
+
+[ ! $VERSION_WINE ] && exit 0
+VERSION_WINE="${VERSION_WINE/ /}|"
+
+}
+
+
+# ### Baixando o Arquivo com as Dependências ###
+
+_progress "Baixando"
+wget -c https://master.dl.sourceforge.net/project/wine/Slackware%20Packages/${VERSION_WINE//\|/\/}wine-${VERSION_WINE//\|/-}1sg.dep
+pkill "$DIAG"
+
+"$DIAG" --title="Concluído" --window-icon=wine.png \
+	$( [ "$DIAG" == "yad" ] && echo "--center" || echo "--width=160" ) \
+	--timeout=2 --info --text='Download Concluído!\n'
