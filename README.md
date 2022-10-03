@@ -1,7 +1,7 @@
 <h1 align="center">
     <b>Wine Slackware Depends</b>
         <br>
-        <img src="https://img.shields.io/badge/Tested%20Platform-Slackware--15.0--x86__64-blue?style=flat-square"/>
+        <img src="https://img.shields.io/badge/Tested%20Distro-Slackware--15.0--x86__64-blue?style=flat-square"/>
         <a href="/LICENSE">
             <img alt="GitHub" src="https://img.shields.io/github/license/mxnt10/wine-slackware-depends?color=blue&label=License&style=flat-square">
         </a>
@@ -23,12 +23,14 @@ O objetivo do projeto é criar um utilitário que pode tanto servir como ferrame
 <h2><b>Utilitários</b></h2>
 
 - <b>download-list</b> : Utilitário para baixar a lista de dependências de uma versão específica do wine para Slackware, a partir da versão 6.0 do wine.
-    ><b>Dependências do utilitário:</b><br/>
+- <b>download-list-multilib</b> : Utilitário para baixar a lista de dependências multilib do Slackware.
+    ><b>Dependências desses utilitários:</b><br/>
     ><img src="https://img.shields.io/badge/Yad%20>=-v10.1-00aa00?style=flat-square"/>
     ><img src="https://img.shields.io/badge/-ou-silver?style=flat-square"/>
     ><img src="https://img.shields.io/badge/Zenity%20>=-v3.32.0-00aa00?style=flat-square"/>
 
 - <b>wine-slackware-depends</b> : Utilitário que vai realizar a busca pelas dependências.
+- <b>slackware-depends-multilib</b> : Utilitário que vai realizar a busca pelas dependências multilib.
 
 <h2><b>GNU General Public License</b></h2>
 

@@ -1,0 +1,106 @@
+#!/bin/bash
+
+###################################################################################################
+#                                                                                                 #
+# ### Sistema de pesquisa por Dependências do Wine no Slackware - Versão 1.0 - 01/10/2022 ###     #
+#                                                                                                 #
+# O objetivo do projeto é criar um utilitário que pode tanto servir como ferramenta de resolução  #
+# de dependências do wine no Slackware como pode servir para complementar algum outro projeto     #
+# como um AppImage que precise de dependências i386, sendo necessário o suporte multilib e as     #
+# dependências compat32 do multilib.                                                              #
+#                                                                                                 #
+# É uma ferramenta apenas para buscar dependências. Geralmente, o Slackware visa resolução de     #
+# dependências de forma manual.                                                                   #
+#                                                                                                 #
+# Testado no Slackware 15.0 x86_64 Stable                                                         #
+#                                                                                                 #
+# By Mauricio Ferrari                                                                             #
+#                                                                                                 #
+# Licença: GLPv3                                                                                  #
+#                                                                                                 #
+###################################################################################################
+
+# ### Dependendo do uso do script, pode precisar ###
+
+[ ! -e FILELIST.TXT ] && {
+	printf "\nBaixe o FILELIST do multilib para o Slackware!\n"
+	exit 1
+}
+
+
+# ### Função de busca por Dependências ###
+
+dependencias_slackware_multilib()
+{
+	DEPS_MULTILIB=$(sed "s/.txz//g" <(grep -Eo "(([[:alnum:]]+)*[-|.|_|+|#|%|@|~|&])+txz$" FILELIST.TXT))
+	DEPS_NAME=$(rev <(cut -d- -f4- <(rev <<< $DEPS_MULTILIB)))
+
+
+	# ### Operações para Pesquisas ###
+
+	cd /var/log/packages
+	LST=$(printf "%s\n" *)
+	cd - > /dev/null
+
+	# ### Busca por Dependências ###
+
+	for PKG in $DEPS_NAME; {
+		[ "$(grep "^gcc-" <<< $PKG)" ] && continue; # Não precisa verificar o gcc
+
+		VERIFY=$(grep "^$PKG-[0-9]" <<< $LST)
+		[ ! "$VERIFY" ] && NOTFOUND=$(echo -e "$NOTFOUND\n\t$PKG") || FOUND=$(echo -e "$FOUND\n\t$VERIFY") # FOUND pode ser comentado
+	}
+
+
+	# ### Organizando Informações, se for comentar o Debug podem ser comentados se não for necessário ###
+
+	FOUND=$(sort -u <<< $FOUND)
+	NUM_FOUND=$(wc -w <<< $FOUND)
+	NOTFOUND=$(sort -u <<< $NOTFOUND)
+
+	NUM_NOTFOUND=$(wc -w <<< $NOTFOUND) # Essencial, não deve ser comentado
+
+
+	# ### Debug do Resultado, pode ser comentado ###
+
+	printf "\nPacotes Encontrados: $NUM_FOUND\t\tNão Encontrados: $NUM_NOTFOUND\n"
+	printf "\nNome dos Pacotes Encontrados: $FOUND\n"
+	printf "\nNome dos Pacotes Não Encontrados: $NOTFOUND\n"
+
+
+	# ### Retorno Numérico ###
+
+	return $[ $(wc -w <<< $NOTFOUND) ]
+}
+
+
+# ### Verificação do suporte multilib ###
+
+suporte_multilib()
+{
+	cd /var/log/packages
+	LST=$(printf "%s\n" *)
+	cd - > /dev/null
+
+	[ ! "$(grep -E "_multilib-" <<< $LST)" ] && return 1 || true;
+}
+
+
+# ### Verificando Suporte Multilib ###
+
+suporte_multilib; RETORNO=$?
+
+[ $RETORNO -eq 1 ] && {
+	printf "\nSem Suporte Multilib.\n"
+	exit 1
+}
+
+
+# ### Por conta do Debug eu usei esse Método ###
+
+dependencias_slackware_multilib; RETORNO=$?
+
+[ $RETORNO -gt 0 ] && {
+		 # Aqui você coloca qualquer coisa um diálogo em yad ou zenity por exemplo.
+	true # O true é só pra função não ficar vazia.
+}
