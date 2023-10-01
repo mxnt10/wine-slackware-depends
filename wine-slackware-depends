@@ -23,7 +23,8 @@
 # ### Dependendo do uso do script, pode precisar ###
 
 [ ! -e wine-*-1sg.dep ] && {
-	printf "\nBaixe um Arquivo de Dependências do Wine para o Slackware!\n"
+{
+	printf "Baixe um Arquivo de Dependências do Wine para o Slackware!\n"
 	exit 1
 }
 
